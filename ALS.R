@@ -1,3 +1,4 @@
+# Compute core for the given factor matrices via pseudoinverses
 solve_core_given_factors <- function(X, U) {
   d <- length(U)
   U_pinv <- lapply(1:d, function(k) {
@@ -9,6 +10,8 @@ solve_core_given_factors <- function(X, U) {
   ttl(X, U_pinv, ms = 1:d)
 }
 
+# Compute the objective function - Frobenius norm of of the difference between the original and reconstructed tensors
+# - after the factors normalization
 compute_objective_with_normalization <- function(X, G, U) {
   result <- list()
   result$core <- G
@@ -22,6 +25,7 @@ compute_objective_with_normalization <- function(X, G, U) {
   return(abs_error)
 }
 
+# Compute the objective function - Frobenius norm of of the difference between the original and reconstructed tensors
 compute_objective <- function(X, G, U) {
   X_recon <- ttl(G, U, ms = 1:length(U))
   return(fnorm(X - X_recon))
@@ -134,7 +138,6 @@ tucker_unimodal_als <- function(X, ranks,
   # G <- ttl(X, lapply(1:d, function(k) t(U[[k]])), ms = 1:d)
   # the new version for pseudoinverse
   G <- solve_core_given_factors(X, U)
-  
   
   # Compute initial error
   current_obj <- compute_objective(X, G, U)
@@ -438,17 +441,7 @@ plot_unimodal_results <- function(result, ALS=FALSE) {
     par(mfrow = c(n_rows, n_cols))
     
     for (k in factors_to_plot) {
-      # matplot(factors[[k]], type = 'l', lwd = 3, lty = 1,
-      #         # main = paste("Mode", k, "Factor Matrix"),
-      #         main = "Basic Functions",
-      #         xlab = "Ordinal Value", ylab = "Factor Loading",
-      #         ylim = c(min(factors[[k]]),max(factors[[k]])),
-      #         col = col[1:ncol(factors[[k]])])
-      
-      # par(mar = c(bottom, left, top, right)), 
-      # the default value for mar is c(5.1, 4.1, 4.1, 2.1).
       par(mar=c(5.1,5.1,2.1,2.1))
-      
       matplot(factors[[k]], type = 'l', lwd = 3, lty = 1,
               # main = paste("Mode", k, "Factor Matrix"),
               main = "",
@@ -463,11 +456,11 @@ plot_unimodal_results <- function(result, ALS=FALSE) {
   }
 }
 
-#' Compare marginal distributions of original and reconstructed tensors
-#' @param X_original Original tensor
-#' @param result Result from tucker_unimodal_admm
-#' @param normalize If TRUE, normalize reconstruction to sum to 1
-#' @return List with marginal L2 errors for each mode
+# Compare marginal distributions of original and reconstructed tensors
+# X_original is the original tensor
+# result is the result from tucker_unimodal_als
+# If normalize == TRUE then normalize reconstruction to sum to 1.
+# Returns a list with marginal L2 errors for each mode.
 plot_marginals_comparison <- function(X_original, result, normalize = TRUE) {
   # Handle both naming conventions
   if (!is.null(result$U)) {
@@ -515,16 +508,7 @@ plot_marginals_comparison <- function(X_original, result, normalize = TRUE) {
       x_vals <- 1:length(marginal_orig)
       y_max <- max(c(marginal_orig, marginal_recon)) * 1.1
       
-      # plot(x_vals, marginal_orig, type = 'b', col = 'blue', lwd = 3, pch = 16,
-      #      # main = paste("Mode", k, "Marginal Distribution"),
-      #      main = "Marginal Distribution",
-      #      xlab = "Ordinal Value", ylab = "Probability",
-      #      ylim = c(0, y_max))
-      
-      # par(mar = c(bottom, left, top, right)), 
-      # the default value for mar is c(5.1, 4.1, 4.1, 2.1).
       par(mar=c(5.1,5.1,2.1,2.1))
-      
       plot(x_vals, marginal_orig, type = 'b', col = 'blue', lwd = 3, pch = 16,
            # main = paste("Mode", k, "Marginal Distribution"),
            main = "",
